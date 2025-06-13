@@ -13,6 +13,7 @@ class AuthViewModel: ObservableObject {
     @Published var isAuthenticated = false
     @Published var currentUser: User?
     @Published var errorMessage = ""
+    @Published var successMessage = ""
     @Published var isLoading = false
     
     init() {
@@ -103,15 +104,16 @@ class AuthViewModel: ObservableObject {
     func resetPassword(email: String) {
         isLoading = true
         errorMessage = ""
+        successMessage = ""
         
         Auth.auth().sendPasswordReset(withEmail: email) { [weak self] error in
             DispatchQueue.main.async {
                 self?.isLoading = false
                 
                 if let error = error {
-                    self?.errorMessage = error.localizedDescription
+                    self?.errorMessage = self?.translateFirebaseError(error) ?? error.localizedDescription
                 } else {
-                    self?.errorMessage = "密碼重設郵件已發送到您的信箱"
+                    self?.successMessage = "密碼重設郵件已發送到您的信箱"
                 }
             }
         }
@@ -119,6 +121,7 @@ class AuthViewModel: ObservableObject {
     
     func clearError() {
         errorMessage = ""
+        successMessage = ""
     }
     
     // MARK: - Validation Functions

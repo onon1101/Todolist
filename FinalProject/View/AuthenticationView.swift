@@ -31,6 +31,10 @@ struct AuthenticationView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: showingLogin)
+            .onChange(of: showingLogin) { _ in
+                // Clear any existing error messages when switching between login and register
+                authViewModel.clearError()
+            }
         }
     }
 }
