@@ -9,6 +9,8 @@ import SwiftUI
 import FirebaseFirestore
 
 struct AboutView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -21,10 +23,12 @@ struct AboutView: View {
                             .padding()
                             .background(Circle().fill(Color.black))
                             .foregroundStyle(.white)
-//                        Text("陳")
-//                        .font(.title)
-//                        .bold()
-                        Text("使用者")
+                        
+                        Text(authViewModel.currentUser?.email ?? "使用者")
+                            .font(.title2)
+                            .fontWeight(.medium)
+                        
+                        Text("已登入")
                             .foregroundStyle(.gray)
                     }
                     .frame(maxWidth: .infinity)
@@ -35,12 +39,16 @@ struct AboutView: View {
                     .padding(.horizontal)
                     
                     VStack(spacing: 24) {
-//                        RowItem(icon: "gear", title: "帳號設定")
-//                        RowItem(icon: "questionmark.circle", title: "尋求協助")
-//                        RowItem(icon: "info.circle", title: "關於我們")
-//                        RowItem(icon: "lock.shield", title: "隱私")
+                        RowItem(icon: "gear", title: "帳號設定")
+                        RowItem(icon: "questionmark.circle", title: "尋求協助")
+                        RowItem(icon: "info.circle", title: "關於我們")
+                        RowItem(icon: "lock.shield", title: "隱私")
                         Divider()
-//                        RowItem(icon: "rectangle.portrait.and.arrow.right", title: "登出")
+                        RowItem(icon: "rectangle.portrait.and.arrow.right", title: "登出")
+                            .onTapGesture {
+                                authViewModel.signOut()
+                            }
+                            .foregroundColor(.orange)
                         RowItem(icon: "trash", title: "清除所有資料")
                             .onTapGesture {
                                 deleteAllTasks()
