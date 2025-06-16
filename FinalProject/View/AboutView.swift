@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FirebaseFirestore
+import FirebaseAuth
 
 struct AboutView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -63,17 +64,23 @@ struct AboutView: View {
             .navigationTitle("個人簡介")
         }
     }
-    
-    func deleteAllTasks() {
+     func deleteAllTasks() {
+        // 檢查用戶是否已登入
+        guard let currentUserId = Auth.auth().currentUser?.uid else {
+            print("❌ 用戶未登入")
+            return
+        }
+        
         let db = Firestore.firestore()
-        db.collection("tasks").getDocuments { snapshot, error in
+        // 只刪除屬於當前用戶的任務
+        db.collection("tasks").whereField("userId", isEqualTo: currentUserId).getDocuments { snapshot, error in
             if let error = error {
                 print("❌ 無法取得資料：\(error.localizedDescription)")
                 return
             }
 
             guard let documents = snapshot?.documents else { return }
-
+            
             for document in documents {
                 db.collection("tasks").document(document.documentID).delete { error in
                     if let error = error {

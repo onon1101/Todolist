@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FirebaseFirestore
+import FirebaseAuth
 
 struct TaskItem: Codable {
     var id = UUID()
@@ -16,6 +17,7 @@ struct TaskItem: Codable {
     var hour: Int
     var deadline: Date
     var note: String
+    var userId: String // 新增用戶 ID 欄位
 }
 
 enum Category: String, CaseIterable, Identifiable {
@@ -122,6 +124,13 @@ struct AddView: View {
                 .navigationTitle("增加事項")
                 
                 Button("儲存") {
+                    // 檢查用戶是否已登入
+                    guard let currentUserId = Auth.auth().currentUser?.uid else {
+                        alertMessage = "❌ 請先登入"
+                        showAlert = true
+                        return
+                    }
+                    
                     let db = Firestore.firestore()
                     let task = TaskItem(
                         title: userInput,
@@ -129,7 +138,8 @@ struct AddView: View {
                         stateCategory: selectionStateCategory.rawValue,
                         hour: selectionHour,
                         deadline: selectDate,
-                        note: note
+                        note: note,
+                        userId: currentUserId // 加入當前用戶 ID
                     )
                     
                     do {
