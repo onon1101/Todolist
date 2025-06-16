@@ -7,8 +7,11 @@
 
 import SwiftUI
 import FirebaseFirestore
+import FirebaseAuth
 
 struct AboutView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -21,10 +24,12 @@ struct AboutView: View {
                             .padding()
                             .background(Circle().fill(Color.black))
                             .foregroundStyle(.white)
-//                        Text("陳")
-//                        .font(.title)
-//                        .bold()
-                        Text("使用者")
+                        
+                        Text(authViewModel.currentUser?.email ?? "使用者")
+                            .font(.title2)
+                            .fontWeight(.medium)
+                        
+                        Text("已登入")
                             .foregroundStyle(.gray)
                     }
                     .frame(maxWidth: .infinity)
@@ -35,12 +40,16 @@ struct AboutView: View {
                     .padding(.horizontal)
                     
                     VStack(spacing: 24) {
-//                        RowItem(icon: "gear", title: "帳號設定")
-//                        RowItem(icon: "questionmark.circle", title: "尋求協助")
-//                        RowItem(icon: "info.circle", title: "關於我們")
-//                        RowItem(icon: "lock.shield", title: "隱私")
+                        RowItem(icon: "gear", title: "帳號設定")
+                        RowItem(icon: "questionmark.circle", title: "尋求協助")
+                        RowItem(icon: "info.circle", title: "關於我們")
+                        RowItem(icon: "lock.shield", title: "隱私")
                         Divider()
-//                        RowItem(icon: "rectangle.portrait.and.arrow.right", title: "登出")
+                        RowItem(icon: "rectangle.portrait.and.arrow.right", title: "登出")
+                            .onTapGesture {
+                                authViewModel.signOut()
+                            }
+                            .foregroundColor(.orange)
                         RowItem(icon: "trash", title: "清除所有資料")
                             .onTapGesture {
                                 deleteAllTasks()
@@ -55,17 +64,23 @@ struct AboutView: View {
             .navigationTitle("個人簡介")
         }
     }
-    
-    func deleteAllTasks() {
+     func deleteAllTasks() {
+        // 檢查用戶是否已登入
+        guard let currentUserId = Auth.auth().currentUser?.uid else {
+            print("❌ 用戶未登入")
+            return
+        }
+        
         let db = Firestore.firestore()
-        db.collection("tasks").getDocuments { snapshot, error in
+        // 只刪除屬於當前用戶的任務
+        db.collection("tasks").whereField("userId", isEqualTo: currentUserId).getDocuments { snapshot, error in
             if let error = error {
                 print("❌ 無法取得資料：\(error.localizedDescription)")
                 return
             }
 
             guard let documents = snapshot?.documents else { return }
-
+            
             for document in documents {
                 db.collection("tasks").document(document.documentID).delete { error in
                     if let error = error {

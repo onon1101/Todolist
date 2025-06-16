@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FirebaseFirestore
+import FirebaseAuth
 import Foundation
 
 struct AIView: View {
@@ -45,8 +46,15 @@ struct AIView: View {
     }
 
     func generateSummary() {
+        // 檢查用戶是否已登入
+        guard let currentUserId = Auth.auth().currentUser?.uid else {
+            summaryText = "❌ 請先登入"
+            return
+        }
+        
         let db = Firestore.firestore()
-        db.collection("tasks").getDocuments { snapshot, error in
+        // 只查詢屬於當前用戶的任務
+        db.collection("tasks").whereField("userId", isEqualTo: currentUserId).getDocuments { snapshot, error in
             if let error = error {
                 summaryText = "❌ 錯誤：\(error.localizedDescription)"
                 return
@@ -64,10 +72,11 @@ struct AIView: View {
                       let stateCategory = data["stateCategory"] as? String,
                       let hour = data["hour"] as? Int,
                       let timestamp = data["deadline"] as? Timestamp,
-                      let note = data["note"] as? String else {
+                      let note = data["note"] as? String,
+                      let userId = data["userId"] as? String else {
                     return nil
                 }
-                return TaskItem(title: title, category: category, stateCategory: stateCategory, hour: hour, deadline: timestamp.dateValue(), note: note)
+                return TaskItem(title: title, category: category, stateCategory: stateCategory, hour: hour, deadline: timestamp.dateValue(), note: note, userId: userId)
             }
 
             let taskDescriptions = tasks.map {

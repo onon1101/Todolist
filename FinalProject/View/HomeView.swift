@@ -6,6 +6,7 @@
 //
 
 import FirebaseFirestore
+import FirebaseAuth
 import SwiftUI
 
 struct HomeView: View {
@@ -69,8 +70,15 @@ struct HomeView: View {
         }
     }
     func fetchTasks() {
+        // 檢查用戶是否已登入
+        guard let currentUserId = Auth.auth().currentUser?.uid else {
+            print("❌ 用戶未登入")
+            return
+        }
+        
         let db = Firestore.firestore()
-        db.collection("tasks").getDocuments { snapshot, error in
+        // 只查詢屬於當前用戶的任務
+        db.collection("tasks").whereField("userId", isEqualTo: currentUserId).getDocuments { snapshot, error in
             if let error = error {
                 print("❌ 錯誤：\(error.localizedDescription)")
                 return
